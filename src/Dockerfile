@@ -1,6 +1,6 @@
-FROM buildpack-deps:buster-scm as build
+FROM buildpack-deps:bookworm-scm AS build
 ARG VERSION=1.0.0
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 # hadolint ignore=DL3008,DL3015
 WORKDIR /
 RUN apt-get update && \
@@ -13,7 +13,7 @@ RUN apt-get update && \
     cd masscan && \
     make
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 ARG VERSION=1.0.0
 LABEL MASSCAN_VERSION=${VERSION}
 # hadolint ignore=DL3008
