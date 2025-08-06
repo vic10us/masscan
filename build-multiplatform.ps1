@@ -3,11 +3,15 @@
 
 param(
     [string]$Tag = "latest",
-    [string]$Registry = ""
+    [string]$Registry = "",
+    [string]$MasscanCommit = "HEAD",
+    [switch]$DryRun
 )
 
 $ImageName = "masscan"
 $ErrorActionPreference = "Stop"
+$BuildDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+$VcsRef = (git rev-parse HEAD)
 
 # Add registry prefix if provided
 if ($Registry) {
@@ -26,12 +30,21 @@ try {
 }
 
 # Build for multiple platforms
-docker buildx build `
-    --file src/Dockerfile `
-    --platform linux/amd64,linux/arm64 `
-    --tag "${FullImageName}:${Tag}" `
-    --push `
-    .
+$BuildArgs = @(
+    "--file", "src/Dockerfile",
+    "--platform", "linux/amd64,linux/arm64",
+    "--build-arg", "VERSION=${Tag}",
+    "--build-arg", "BUILD_DATE=${BuildDate}",
+    "--build-arg", "VCS_REF=${VcsRef}",
+    "--build-arg", "MASSCAN_COMMIT=${MasscanCommit}",
+    "--tag", "${FullImageName}:${Tag}"
+)
+
+if (-not $DryRun) {
+    $BuildArgs += "--push"
+}
+
+docker buildx build @BuildArgs .
 
 Write-Host "✅ Multi-platform build complete!" -ForegroundColor Green
 Write-Host "Image: ${FullImageName}:${Tag}" -ForegroundColor Yellow
