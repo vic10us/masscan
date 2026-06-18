@@ -82,14 +82,18 @@ jobs:
       - name: Add conditional tags
         id: final_tags
         run: |
-          BASE_TAGS="${{ steps.docker_meta.outputs.tags }}"
           if [[ "${{ github.ref }}" == *"-rc"* ]] || [[ "${{ github.ref }}" == *"-RC"* ]]; then
-            # Release candidate - add 'rc' tag
-            echo "tags=${BASE_TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:rc" >> $GITHUB_OUTPUT
+            EXTRA_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:rc"
           else
-            # Final release - add 'latest' tag
-            echo "tags=${BASE_TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_OUTPUT
+            EXTRA_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           fi
+          # Use multiline output format since docker_meta tags are newline-separated
+          {
+            echo "tags<<EOF"
+            echo "${{ steps.docker_meta.outputs.tags }}"
+            echo "${EXTRA_TAG}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
