@@ -4,7 +4,7 @@
 param(
     [string]$Tag = "latest",
     [string]$Registry = "",
-    [string]$MasscanCommit = "HEAD",
+    [string]$MasscanCommit = "",  # empty = commit pinned in src/Dockerfile
     [switch]$DryRun
 )
 
@@ -36,9 +36,12 @@ $BuildArgs = @(
     "--build-arg", "VERSION=${Tag}",
     "--build-arg", "BUILD_DATE=${BuildDate}",
     "--build-arg", "VCS_REF=${VcsRef}",
-    "--build-arg", "MASSCAN_COMMIT=${MasscanCommit}",
     "--tag", "${FullImageName}:${Tag}"
 )
+
+if ($MasscanCommit) {
+    $BuildArgs += "--build-arg", "MASSCAN_COMMIT=${MasscanCommit}"
+}
 
 if (-not $DryRun) {
     $BuildArgs += "--push"
