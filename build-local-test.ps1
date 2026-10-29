@@ -3,13 +3,14 @@
 
 param(
     [string]$Tag = "test",
-    [string]$MasscanCommit = "HEAD"
+    [string]$MasscanCommit = ""  # empty = commit pinned in src/Dockerfile
 )
 
 $ImageName = "masscan"
 $ErrorActionPreference = "Stop"
 $BuildDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
 $VcsRef = (git rev-parse HEAD)
+$CommitArg = if ($MasscanCommit) { @("--build-arg", "MASSCAN_COMMIT=${MasscanCommit}") } else { @() }
 
 Write-Host "Building multi-platform Docker image locally: ${ImageName}:${Tag}" -ForegroundColor Green
 
@@ -30,7 +31,7 @@ docker buildx build `
     --build-arg VERSION="${Tag}" `
     --build-arg BUILD_DATE="${BuildDate}" `
     --build-arg VCS_REF="${VcsRef}" `
-    --build-arg MASSCAN_COMMIT="${MasscanCommit}" `
+    @CommitArg `
     --load `
     .
 
@@ -42,7 +43,7 @@ docker buildx build `
     --build-arg VERSION="${Tag}" `
     --build-arg BUILD_DATE="${BuildDate}" `
     --build-arg VCS_REF="${VcsRef}" `
-    --build-arg MASSCAN_COMMIT="${MasscanCommit}" `
+    @CommitArg `
     --load `
     .
 
